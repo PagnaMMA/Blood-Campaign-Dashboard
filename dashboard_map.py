@@ -6,6 +6,8 @@ import json
 import random
 import numpy as np
 import pandas as pd
+
+
 # UI Component Functions
 def render_header():
     col1,col2 = st.columns(2)
@@ -117,10 +119,6 @@ def random_color():
     b = random.randint(0, 255)
     return f'#{r:02x}{g:02x}{b:02x}'
 
-# Streamlit app
-st.title('Cameroon Arrondissements Map')
-
-# File uploader
 # File uploader
 file_path = "data/geoBoundaries-CMR-ADM3.geojson"
 # Open and read the JSON file
@@ -247,16 +245,8 @@ if data is not None:
         folium_static(m)
         
         # Display color legend
-        col3, col4 = st.columns(2)
-        with col3:
-            st.subheader('**Arrondissement Colors**')
-            for arr, color in color_map.items():
-                # Only show legend for displayed places
-                if not selected_places or arr in selected_places:
-                    st.markdown(f"<div style='background-color:{color};padding:5px;margin:2px;'>{arr}</div>", unsafe_allow_html=True)
-        with col4:
-            st.subheader('**Quaters Colors**')
-            for qar, color in color_map.items():
-                # Only show legend for displayed places
-                if not selected_places or qar in selected_places:
-                    st.markdown(f"<div style='background-color:{color};padding:5px;margin:2px;'>{qar}</div>", unsafe_allow_html=True)
+        st.subheader('**Arrondissement Colors**')
+        for arr, color in color_map.items():
+            # Only show legend for displayed places
+            if not selected_places or arr in selected_places:
+                st.markdown(f"<div style='background-color:{color};padding:5px;margin:2px;'>{arr}</div>", unsafe_allow_html=True)

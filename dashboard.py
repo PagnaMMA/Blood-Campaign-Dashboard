@@ -202,14 +202,6 @@ def render_sidebar():
         st.image("Images/codeflow.png", width=200)
             
         st.markdown("## **Navigation**")
-        expander = st.expander("⚒ **Menu**")
-        with expander:
-            page = st.radio("Select Dashboard Page", [
-                "Home Page","Overview", "Geographic Distribution", "Health Conditions", 
-                "Donor Profiles", "Campaign Effectiveness", "Donor Retention", 
-                "Sentiment Analysis", "Eligibility Prediction", "Data Collection"
-            ])
-
         expander = st.expander("🗀 File Input")
         with expander:
             file_uploader_key = "file_uploader_{}".format(
@@ -250,7 +242,7 @@ def render_sidebar():
                 donors = process_donor_data(donors)
 
         ## Definition of filters
-        expander = st.expander("**Filters**")
+        expander = st.expander("⚒ **Filters**")
         with expander:
             if donor_candidates_birth is not None:
                 age_min, age_max = int(donor_candidates_birth['age'].min()), int(donor_candidates_birth['age'].max())
@@ -268,7 +260,7 @@ def render_sidebar():
                 age_range, weight_range, gender, district = 0, 0, 'All', 'All'
             
         data = [donor_candidates_birth, donors]
-        return page, age_range, weight_range, gender, district, data
+        return age_range, weight_range, gender, district, data
 
 def apply_filters(age_range, weight_range, gender, district, df):
     if df[0] is not None and df[1] is not None:
@@ -444,13 +436,12 @@ def render_overview(donor_candidates_birth, donors):
 def render_health_conditions(data, weight_range, age_range, gender, district):
     st.markdown("<div class='sub-header'>Health Conditions Analysis</div>", unsafe_allow_html=True)
     donor_candidates_birth = data[0]
-    if data is not None:
+    if donor_candidates_birth is not None:
         filtered_df1, filtered_df2 = apply_filters(age_range, weight_range, gender, district, data)
         charts_row = st.columns(2)
         with charts_row[0]:
             st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
             st.subheader("Eligibility by Health Condition")
-
             df_ineligible = donor_candidates_birth[donor_candidates_birth['eligibility'] != 'Eligible']
             counts = []
             ineligible_pb = list(df_ineligible.columns)
@@ -519,59 +510,63 @@ def render_health_conditions(data, weight_range, age_range, gender, district):
             fig.update_layout(height=300)
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
-
+    else:
+        print(f'💢 Unpload the data first !')
 def render_donor_retention(data):
     st.markdown("<div class='sub-header'>Donor Retention Analysis</div>", unsafe_allow_html=True)
     metrics_row = st.columns(3)
     donor_candidates_birth, donors = data[0], data[1]
-    number_past_donation = donor_candidates_birth["has_donated_before"].str.count('Oui').sum()
-    past_donation_rate = round(number_past_donation/len(donor_candidates_birth["has_donated_before"]),2)
-    print(past_donation_rate)
-    number_eligible = donor_candidates_birth["eligibility"].str.count('Eligible').sum()
-    new_donation_rate = round(number_eligible/len(donor_candidates_birth['eligibility']),2)
-    print(new_donation_rate)
-    retention_rate = round(new_donation_rate/past_donation_rate,2)
-    print(retention_rate)
-    with metrics_row[0]:
-        st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
-        st.metric("Retention Rate",str(past_donation_rate*100)+"%" ," ↑ "+str(retention_rate)+"%")
-        st.write("Percentage of donors who return to donate again")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with metrics_row[1]:
-        st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
-        st.metric("Average Donations", "2.8", "↑ 0.3")
-        st.write("Average number of donations per Campaign")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with metrics_row[2]:
-        st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
-        st.metric("Donor Lifetime", "3.2 years", "↑ 0.2")
-        st.write("Average duration of donor participation")
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
-    st.subheader("Donor Cohort Retention Analysis")
+    if donor_candidates_birth is not None:
+        number_past_donation = donor_candidates_birth["has_donated_before"].str.count('Oui').sum()
+        past_donation_rate = round(number_past_donation/len(donor_candidates_birth["has_donated_before"]),2)
+        print(past_donation_rate)
+        number_eligible = donor_candidates_birth["eligibility"].str.count('Eligible').sum()
+        new_donation_rate = round(number_eligible/len(donor_candidates_birth['eligibility']),2)
+        print(new_donation_rate)
+        retention_rate = round(new_donation_rate/past_donation_rate,2)
+        print(retention_rate)
+        with metrics_row[0]:
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric("Retention Rate",str(past_donation_rate*100)+"%" ," ↑ "+str(retention_rate)+"%")
+            st.write("Percentage of donors who return to donate again")
+            st.markdown("</div>", unsafe_allow_html=True)
+        with metrics_row[1]:
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric("Average Donations", "2.8", "↑ 0.3")
+            st.write("Average number of donations per Campaign")
+            st.markdown("</div>", unsafe_allow_html=True)
+        with metrics_row[2]:
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric("Donor Lifetime", "3.2 years", "↑ 0.2")
+            st.write("Average duration of donor participation")
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
+        st.subheader("Donor Cohort Retention Analysis")
 
-    donors['timestamp'] = pd.to_datetime(donors['timestamp'], format='%m/%d/%Y %H:%M:%S')
-    donors['Date'] = donors['timestamp'].dt.date
-    date_counts = donors['Date'].value_counts().sort_index()
+        donors['timestamp'] = pd.to_datetime(donors['timestamp'], format='%m/%d/%Y %H:%M:%S')
+        donors['Date'] = donors['timestamp'].dt.date
+        date_counts = donors['Date'].value_counts().sort_index()
 
-    cohorts = donors['Date'].unique()
-    periods = ['Day '+ str(i) for i in range(len(cohorts))]
-    retention_data = []
-    for cohort in cohorts:
-        base = np.random.uniform(0.9, 1.0)
-        retention_vals = [round(date_counts[0] / len(donors['Date']), 2)]
-        for i in range(1,len(periods)):
-            retention_vals.append(round(date_counts[i] / len(donors['Date']), 2))
-        retention_data.append(retention_vals)
-    retention_df = pd.DataFrame(retention_data, index=cohorts, columns=periods)
-    fig = px.imshow(retention_df, labels=dict(x="Period", y="Cohort", color="Retention Rate"), x=periods, y=cohorts, color_continuous_scale='Reds', text_auto=True, aspect="auto")
-    fig.update_layout(title="Donor Retention by Cohort", height=500)
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+        cohorts = donors['Date'].unique()
+        periods = ['Day '+ str(i) for i in range(len(cohorts))]
+        retention_data = []
+        for cohort in cohorts:
+            base = np.random.uniform(0.9, 1.0)
+            retention_vals = [round(date_counts[0] / len(donors['Date']), 2)]
+            for i in range(1,len(periods)):
+                retention_vals.append(round(date_counts[i] / len(donors['Date']), 2))
+            retention_data.append(retention_vals)
+        retention_df = pd.DataFrame(retention_data, index=cohorts, columns=periods)
+        fig = px.imshow(retention_df, labels=dict(x="Period", y="Cohort", color="Retention Rate"), x=periods, y=cohorts, color_continuous_scale='Reds', text_auto=True, aspect="auto")
+        fig.update_layout(title="Donor Retention by Cohort", height=500)
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    else:
+        print(f'💢 Upload the data first !')
 
 def render_data_collection(geo_data):
-    st.markdown("<div class='sub-header'>Contribute to the Databank</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sub-header'>Contribute to the Dapageank</div>", unsafe_allow_html=True)
     with st.form("new_data_form"):
         col1, col2 = st.columns(2)
         with col1:
@@ -598,7 +593,7 @@ def render_data_collection(geo_data):
                 'DDR < 14 Days','Breast Feeding','Born < 6 months','Pregnancy Stop < 6 months',
                 'Pregnant','Previous Transfusion','Have IST','Operate','Sickle Cell','Diabetic',
                 'Hypertensive','Asmatic', 'Heart Attack', 'Tattoo','Scarified','None'])
-        submit = st.form_submit_button("Add to Databank")
+        submit = st.form_submit_button("Add to Dapageank")
         
         if submit:
             new_candidate = {
@@ -615,12 +610,12 @@ def render_data_collection(geo_data):
                 new_donor = {'timestamp': datetime.now(), 'gender': gender, 'age': age, 'donation_type': 'B', 'blood_group': blood_group}
                 st.session_state.new_donors = pd.concat([st.session_state.new_donors, pd.DataFrame([new_donor])], ignore_index=True)
             
-            st.success("Data added to databank!")
+            st.success("Data added to dapageank!")
 
-    st.markdown("### New Databank Entries for Candidates")
+    st.markdown("### New Dapageank Entries for Candidates")
     st.write(st.session_state.new_candidates)
 
-    st.markdown("### New Databank Entries for Donors")
+    st.markdown("### New Dapageank Entries for Donors")
     st.write(st.session_state.new_donors)
     
     if len(st.session_state.new_candidates) > 0:
@@ -715,12 +710,11 @@ def main():
     render_header()
     render_styles()
     L = render_sidebar()
-    page = L[0]
-    age_range = L[1]
-    weight_range = L[2]
-    gender = L[3]
-    district = L[4]
-    data = L[5]
+    age_range = L[0]
+    weight_range = L[1]
+    gender = L[2]
+    district = L[3]
+    data = L[4]
 
     if L is not None:
         donor_candidates_birth, donors = apply_filters(age_range, weight_range, gender, district, data)
@@ -740,26 +734,40 @@ def main():
         "Eligibility Prediction": render_eligibility_prediction,
         "Data Collection": render_data_collection
     }
-    if page in ["Home Page"]:
-        page_functions[page](donor_candidates_birth, donors)
-    elif page in ["Overview"]:
-        page_functions[page](donor_candidates_birth, donors)
-    elif page in ["Geographic Distribution"]:
-        page_functions[page]()
-    elif page in ["Health Conditions", "Donor Profiles"]:
-        page_functions[page](data, weight_range, age_range, gender, district)
-    elif page in ["Eligibility Prediction"]:
-        page_functions[page]()
-    elif page in ["Data Collection"]:
-        page_functions[page](geo_data)
-    elif page in ["Sentiment Analysis"]:
-        page_functions[page](donor_candidates_birth)
-    elif page in ["Donor Retention"]:
-        page_functions[page](data)
-    elif page in ["Campaign Effectiveness"]:
-        page_functions[page]()
-    else:
-        page_functions[page]()
+
+    # Define the tab names
+    tabs = list(page_functions.keys())  # Get the keys (tab names)
+
+    # Create tabs
+    tab_objects = st.tabs(tabs)
+
+    # Loop through each tab and call the corresponding function
+    for tab, tab_name in zip(tab_objects, tabs):
+        with tab:
+            st.header(tab_name)  # Display tab name as a header
+            #page_functions[tab_name]()  # Call the respective function
+            if tab_name == "Home Page":
+                page_functions[tab_name](donor_candidates_birth, donors)
+            elif tab_name == "Overview":
+                page_functions[tab_name](donor_candidates_birth, donors)
+            elif tab_name in ["Geographic Distribution"]:
+                page_functions[tab_name]()
+            elif tab_name == "Health Conditions":
+                page_functions[tab_name](data, weight_range, age_range, gender, district)
+            elif tab_name == "Donor Profiles":
+                page_functions[tab_name](data, weight_range, age_range, gender, district)
+            elif tab_name == "Eligibility Prediction":
+                page_functions[tab_name]()
+            elif tab_name == "Data Collection":
+                page_functions[tab_name](geo_data)
+            elif tab_name == "Sentiment Analysis":
+                page_functions[tab_name](donor_candidates_birth)
+            elif tab_name == "Donor Retention":
+                page_functions[tab_name](data)
+            elif tab_name in ["Campaign Effectiveness"]:
+                page_functions[tab_name]()
+            else:
+                page_functions[tab_name]()
     
     st.markdown('<div class="footer">Developed by Team [CodeFlow] | March 2025</div>', unsafe_allow_html=True)
 
