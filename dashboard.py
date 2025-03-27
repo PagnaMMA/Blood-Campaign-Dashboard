@@ -664,36 +664,15 @@ def render_campaign_effectiveness():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def render_donor_profiles(data, age_range, weight_range, gender, district):
+def render_donor_profiles(data, weight_range, age_range, gender, district):
     st.markdown("<div class='sub-header'>Donor Profile Analysis</div>", unsafe_allow_html=True)
-    donor_candidates_birth, donors = data[0], data[1]
-    if donor_candidates_birth is not None:
-        filtered_df1, filtered_df12 = apply_filters(donor_candidates_birth, age_range, weight_range, gender, district)
-        cluster_col, profile_col = st.columns([2, 1])
-        with cluster_col:
-            st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
-            st.subheader("Donor Candidates Clustering")
-            if 'age' in filtered_df1.columns and 'weight' in filtered_df1.columns:
-                X = filtered_df1[['age', 'weight']].dropna()
-                if len(X) > 3:
-                    kmeans = KMeans(n_clusters=3, random_state=42)
-                    clusters = kmeans.fit_predict(X)
-                    cluster_df = pd.DataFrame({'Age': X['age'], 'Weight': X['weight'], 'Cluster': ['Cluster ' + str(i+1) for i in clusters]})
-                    fig = px.scatter(cluster_df, x='Age', y='Weight', color='Cluster', color_discrete_sequence=['#B22222', '#FF8C00', '#4682B4'], title="Donor Segments by Age and Weight")
-                    fig.update_layout(height=500)
-                    st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        with profile_col:
-            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
-            st.subheader("Donor Personas")
-            st.write("### Cluster 1: Regular Donors")
-            st.write("- *Age Range:* 30-45\n- *Weight:* 70-90 kg\n- *Key Motivator:* Altruism")
-            st.write("### Cluster 2: Occasional Donors")
-            st.write("- *Age Range:* 20-35\n- *Weight:* 60-80 kg\n- *Key Motivator:* Social recognition")
-            st.write("### Cluster 3: Family Donors")
-            st.write("- *Age Range:* 35-60\n- *Weight:* 65-85 kg\n- *Key Motivator:* Family needs")
-            st.markdown("</div>", unsafe_allow_html=True)
-
+    pg = st.navigation([st.Page("dashboard_cluster.py")])
+    pg.run()
+    
+def render_geographic_distribution():
+    st.markdown("<div class='sub-header'>Geographic Distribution of Donors</div>", unsafe_allow_html=True)
+    pg = st.navigation([st.Page("dashboard_map.py")])
+    pg.run()
 
 def render_sentiment_analysis(donor_candidates_birth):
     st.markdown("<div class='sub-header'>Sentiment Analysis of Donor Feedback</div>", unsafe_allow_html=True)
@@ -752,7 +731,7 @@ def main():
     page_functions = {
         "Home Page": home_page,
         "Overview": render_overview,
-        #"Geographic Distribution": render_geographic_distribution,
+        "Geographic Distribution": render_geographic_distribution,
         "Health Conditions": render_health_conditions,
         "Donor Profiles": render_donor_profiles,
         "Campaign Effectiveness": render_campaign_effectiveness,
@@ -766,7 +745,7 @@ def main():
     elif page in ["Overview"]:
         page_functions[page](donor_candidates_birth, donors)
     elif page in ["Geographic Distribution"]:
-        page_functions[page](donor_candidates_birth, geo_data)
+        page_functions[page]()
     elif page in ["Health Conditions", "Donor Profiles"]:
         page_functions[page](data, weight_range, age_range, gender, district)
     elif page in ["Eligibility Prediction"]:
